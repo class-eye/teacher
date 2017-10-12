@@ -17,29 +17,34 @@ using namespace cv;
 using namespace std;
 using namespace caffe;
 
-bool start = true;
-bool yes_or_no;
-int current_frame_ = 0;
-int raising_frame = 0;
-int have_person_frame = 0;
-
-
+static float CalculateVectorAngle(float x1, float y1, float x2, float y2, float x3, float y3)
+{
+	float x_1 = x2 - x1;
+	float x_2 = x3 - x2;
+	float y_1 = y2 - y1;
+	float y_2 = y3 - y2;
+	float lx = sqrt(x_1*x_1 + y_1*y_1);
+	float ly = sqrt(x_2*x_2 + y_2*y_2);
+	return 180.0 - acos((x_1*x_2 + y_1*y_2) / lx / ly) * 180 / 3.1415926;
+}
 Teacher_Info teacher_detect(Net &net1, Net &net2, jfda::JfdaDetector &detector, cv::Mat &img, Rect &box_pre,int &n){
 	//cout << box_pre.x << " " << box_pre.y << " " << box_pre.width << " " << box_pre.height << endl;
 	Teacher_Info teacher_info;
 	Rect bbox_new;
 	vector<Rect>all_bbox;
 	Rect bbox_new1;
+	bool yes_or_no;
 	Timer timer;
 	if (n % 25 == 0){
-		/*Mat img_copy;
+		//Í¿µô²¿·ÖÇøÓò
+		Mat img_copy;
 		img_copy = img;
-		int height = img.size().height * 2 / 3;
-		cv::rectangle(img_copy, Point(0, height), Point(img.size[1],img.size[0]),Scalar(0,0,0),-1,8,0);*/
+		int height = 800;
+		cv::rectangle(img_copy, Point(0, height), Point(img.size[1],img.size[0]),Scalar(0,0,0),-1,8,0);
 
 		timer.Tic();
 		//detect body
-		all_bbox = im_detect(net2, img, box_pre);
+		all_bbox = im_detect(net2, img_copy, box_pre);
 		cv::rectangle(img, box_pre, cv::Scalar(0, 0, 255), 2);
 		//timer.Toc();
 		//cout << "detect body cost " << timer.Elasped() / 1000.0 << "s" << endl;
@@ -73,29 +78,44 @@ Teacher_Info teacher_detect(Net &net1, Net &net2, jfda::JfdaDetector &detector, 
 			//detect face
 			vector<FaceInfoInternal>facem;
 			vector<FaceInfo> faces = detector.Detect(im_body, facem);
+
+			//pose estimation
 			int symbol_l = 0;
 			int symbol_r = 0;
-			if (faces.size() == 0){
-				if (all_peaks[4].size() != 0 && all_peaks[3].size() != 0 && all_peaks[2].size() != 0 && all_peaks[4][2] > 0.2 && all_peaks[3][2] > 0.2 && all_peaks[2][2] > 0.2){
+			if (all_peaks[4].size() != 0 && all_peaks[3].size() != 0 && all_peaks[2].size() != 0 && all_peaks[4][2] > 0.2 && all_peaks[3][2] > 0.2 && all_peaks[2][2] > 0.2){
+				if (faces.size() == 0){
 					if (((all_peaks[4][1] < all_peaks[3][1]) && (all_peaks[3][1] < all_peaks[2][1]))){
-
 						symbol_r = 1;
 					}
 				}
-				if (all_peaks[7].size() != 0 && all_peaks[6].size() != 0 && all_peaks[5].size() != 0 && all_peaks[7][2] > 0.2 && all_peaks[6][2] > 0.2 && all_peaks[5][2] > 0.2){
+				float angle_r = CalculateVectorAngle(all_peaks[2][0], all_peaks[2][1], all_peaks[3][0], all_peaks[3][1], all_peaks[4][0], all_peaks[4][1]);
+				if (all_peaks[4][1] <= all_peaks[2][1]){		
+					if (angle_r > 120)symbol_r = 1;
+				}
+			}
+			if (all_peaks[7].size() != 0 && all_peaks[6].size() != 0 && all_peaks[5].size() != 0 && all_peaks[7][2] > 0.2 && all_peaks[6][2] > 0.2 && all_peaks[5][2] > 0.2){
+				if (faces.size() == 0){
 					if ((all_peaks[7][1] < all_peaks[6][1]) && (all_peaks[6][1] < all_peaks[5][1])){
 						symbol_l = 1;
 					}
 				}
+				float angle_l = CalculateVectorAngle(all_peaks[5][0], all_peaks[5][1], all_peaks[6][0], all_peaks[6][1], all_peaks[7][0], all_peaks[7][1]);
+				if (all_peaks[7][1] <= all_peaks[5][1]){		
+					if (angle_l > 120)symbol_l = 1;
+				}
 			}
+			
 			if (symbol_l == 1 || symbol_r == 1){
+				string status = "Doing Action";
 				yes_or_no = true;
+				cv::putText(img, status, Point(img.size[1] / 2, img.size[0] / 2), FONT_HERSHEY_DUPLEX,1,Scalar(255,255,255));
 
 			}
 			else{
 				yes_or_no = false;
 			}
 			teacher_info.writing = yes_or_no;
+			
 			string output = "../output";
 			char buff[300];
 			sprintf(buff, "%s/%d.jpg", output.c_str(), n);
