@@ -12,6 +12,7 @@ struct Teacher_Info{
 	bool writing=false;
 	bool front_pointing=false;
 	bool back_pointing = false;
+	int num;
 };
 Teacher_Info teacher_detect(Net &net1, Net &net2, jfda::JfdaDetector &detector, cv::Mat &img, Rect &box_pre, int &n);
 #endif

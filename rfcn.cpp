@@ -12,7 +12,6 @@ using namespace caffe;
 struct BBox {
 	float x1, y1, x2, y2;
 };
-
 Rect refine(Mat &img,Rect &box_r)
 {
 	if (box_r.x <= 0)
@@ -161,6 +160,12 @@ vector<Rect> im_detect(Net &net,Mat &im,  Rect &box_pre) {
 			bbox_new.height = int(bbox.y2) - int(bbox.y1) + 150;
 			bbox_new = refine(im, bbox_new);
 			all_bbox.push_back(bbox_new);
+		}
+		if (all_bbox.size()>1){
+			box_pre.x = 0;
+			box_pre.y = 0;
+			box_pre.width = im.size().width;
+			box_pre.height = im.size().height;
 		}
 		if (all_bbox.size()==1){
 			box_pre.x = bbox_new.x - 450;

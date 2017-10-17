@@ -41,8 +41,8 @@ Teacher_Info teacher_detect(Net &net1, Net &net2, jfda::JfdaDetector &detector,c
 		//Í¿µô²¿·ÖÇøÓò
 		Mat img_copy;
 		img.copyTo(img_copy);
-		/*int height = 800;
-		cv::rectangle(img_copy, Point(0, height), Point(img.size[1],img.size[0]),Scalar(0,0,0),-1,8,0);*/
+		int height = 800;
+		cv::rectangle(img_copy, Point(0, height), Point(img.size[1], img.size[0]), Scalar(0, 0, 0), -1, 8, 0);
 
 		timer.Tic();
 		//detect body
@@ -50,16 +50,17 @@ Teacher_Info teacher_detect(Net &net1, Net &net2, jfda::JfdaDetector &detector,c
 		//cv::rectangle(img, box_pre, cv::Scalar(0, 0, 255), 2);
 		/*timer.Toc();
 		cout << "detect body cost " << timer.Elasped() / 1000.0 << "s" << endl;*/
-		/*if (all_bbox.size() > 1){
-			for (Rect box : all_bbox){
-				cv::rectangle(img, box, cv::Scalar(0, 255, 0), 2);
-			}
-		}*/
+		if (all_bbox.size() > 1){
+			teacher_info.num = all_bbox.size();
+			return teacher_info;
+		}
 		if (all_bbox.size() == 1){
 			bbox_new = all_bbox[0];
 			if (bbox_new.x != box_pre.x || bbox_new.y != box_pre.y || bbox_new.width != box_pre.width || bbox_new.height != box_pre.height){
+				teacher_info.num = 1;
 				cv::rectangle(img, bbox_new, cv::Scalar(0, 255, 0), 2);
 			}
+			else teacher_info.num = 0;
 		
 			//detect pose
 			bbox_new1.height = bbox_new.height;
@@ -86,7 +87,7 @@ Teacher_Info teacher_detect(Net &net1, Net &net2, jfda::JfdaDetector &detector,c
 			if (faces.size() != 0 && faces[0].score>0.9){
 				string score = to_string(faces[0].score);
 				cv::rectangle(img, Point(faces[0].bbox.x + bbox_new1.x, faces[0].bbox.y + bbox_new1.y), Point(faces[0].bbox.x + bbox_new1.x + faces[0].bbox.width, faces[0].bbox.y + bbox_new1.y + faces[0].bbox.height), cv::Scalar(0, 0, 255), 2);
-				cv::putText(img, score, Point(faces[0].bbox.x + bbox_new1.x, faces[0].bbox.y + bbox_new1.y-15), FONT_HERSHEY_DUPLEX, 1, Scalar(255, 255, 255));
+				//cv::putText(img, score, Point(faces[0].bbox.x + bbox_new1.x, faces[0].bbox.y + bbox_new1.y-15), FONT_HERSHEY_DUPLEX, 1, Scalar(255, 255, 255));
 			}
 
 			//pose estimation
@@ -117,28 +118,31 @@ Teacher_Info teacher_detect(Net &net1, Net &net2, jfda::JfdaDetector &detector,c
 			if (front_symbol_l || front_symbol_r){  //front pointing
 				teacher_info.front_pointing = true;
 			}
-			if (symbol_l || symbol_r)raising_time += 1;	
-			else raising_time = 0;
-						
-			raising_total_time = raising_time;
-			if (raising_total_time >= 4){       //back raising_time>=4   writing
-				teacher_info.writing = true;
-				teacher_info.back_pointing = false;
-			}
-			else{
-				teacher_info.writing = false;
-			}
-			if (raising_total_time >= 1 && raising_total_time<4){  //back   1=<rasing_time<4  pointing
+			if (symbol_l || symbol_r){
 				teacher_info.back_pointing = true;
 			}
-			if (teacher_info.writing){
-				string status = "Writing";
-				cv::putText(img, status, Point(img.size[1] / 2, img.size[0] / 2), FONT_HERSHEY_DUPLEX, 1, Scalar(255, 255, 255));
-			}
-			if (teacher_info.front_pointing||teacher_info.back_pointing){
-				string status = "Pointing";
-				cv::putText(img, status, Point(img.size[1] / 2, img.size[0] / 2), FONT_HERSHEY_DUPLEX, 1, Scalar(255, 255, 255));
-			}
+			//if (symbol_l || symbol_r)raising_time += 1;	
+			//else raising_time = 0;
+			//			
+			//raising_total_time = raising_time;
+			//if (raising_total_time >= 4){       //back raising_time>=4   writing
+			//	teacher_info.writing = true;
+			//	teacher_info.back_pointing = false;
+			//}
+			//else{
+			//	teacher_info.writing = false;
+			//}
+			//if (raising_total_time >= 1 && raising_total_time<4){  //back   1=<rasing_time<4  pointing
+			//	teacher_info.back_pointing = true;
+			//}
+			//if (teacher_info.writing){
+			//	string status = "Writing";
+			//	cv::putText(img, status, Point(img.size[1] / 2, img.size[0] / 2), FONT_HERSHEY_DUPLEX, 1, Scalar(255, 255, 255));
+			//}
+			//if (teacher_info.front_pointing||teacher_info.back_pointing){
+			//	string status = "Pointing";
+			//	cv::putText(img, status, Point(img.size[1] / 2, img.size[0] / 2), FONT_HERSHEY_DUPLEX, 1, Scalar(255, 255, 255));
+			//}
 			string output = "../output";
 			char buff[300];
 			sprintf(buff, "%s/%d.jpg", output.c_str(), n);
@@ -147,6 +151,7 @@ Teacher_Info teacher_detect(Net &net1, Net &net2, jfda::JfdaDetector &detector,c
 			cout << "Frame " << n << " cost " << timer.Elasped() / 1000.0 << "s" << endl;
 			return teacher_info;
 		}
+		cout << n << " " << teacher_info.num << " " << boolalpha << (teacher_info.front_pointing) << " " << boolalpha << (teacher_info.back_pointing) << endl;
 	}
 }
 
