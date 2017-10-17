@@ -41,8 +41,8 @@ Teacher_Info teacher_detect(Net &net1, Net &net2, jfda::JfdaDetector &detector,c
 		//Í¿µô²¿·ÖÇøÓò
 		Mat img_copy;
 		img.copyTo(img_copy);
-		int height = 800;
-		cv::rectangle(img_copy, Point(0, height), Point(img.size[1], img.size[0]), Scalar(0, 0, 0), -1, 8, 0);
+		/*int height = 800;
+		cv::rectangle(img_copy, Point(0, height), Point(img.size[1], img.size[0]), Scalar(0, 0, 0), -1, 8, 0);*/
 
 		timer.Tic();
 		//detect body
@@ -77,6 +77,14 @@ Teacher_Info teacher_detect(Net &net1, Net &net2, jfda::JfdaDetector &detector,c
 			for (int i = 2; i < 8; i++){
 				if (all_peaks[i].size() != 0 && all_peaks[i][2] > 0.2){
 					cv::circle(img, Point(all_peaks[i][0] + bbox_new1.x, all_peaks[i][1] + bbox_new1.y), 4, cv::Scalar(0, 0, 255), -1);
+				}
+			}
+
+			if (teacher_info.num == 0){
+				for (int i = 0; i < 8; i++){
+					if (all_peaks[i].size() != 0 && all_peaks[i][2] > 0.2){
+						teacher_info.teacher_in_screen = true;
+					}
 				}
 			}
 
@@ -149,9 +157,8 @@ Teacher_Info teacher_detect(Net &net1, Net &net2, jfda::JfdaDetector &detector,c
 			cv::imwrite(buff, img);
 			timer.Toc();
 			cout << "Frame " << n << " cost " << timer.Elasped() / 1000.0 << "s" << endl;
-			return teacher_info;
-		}
-		cout << n << " " << teacher_info.num << " " << boolalpha << (teacher_info.front_pointing) << " " << boolalpha << (teacher_info.back_pointing) << endl;
+			return teacher_info;	
+		}		
 	}
 }
 
