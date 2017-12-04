@@ -11,12 +11,41 @@
 #include "cv.h"  
 #include "teacher/teacher.hpp"
 #include "teacher/Timer.hpp"
-
+#ifdef __unix__
+#include <json/json.h>
+//#include <python2.7/Python.h>
+#endif
 
 using namespace cv;
 using namespace std;
 using namespace caffe;
 
+Json::Value root_all;
+void writeJson(Teacher_Info &teacher_info, int &n){
+	Json::Value root;
+	root["Frame"] = n;
+	root["Teacher's location"].append(teacher_info.location.x);
+	root["Teacher's location"].append(teacher_info.location.y);
+	for (int j = 0; j < 8; j++){
+		Json::Value part_loc;
+		int x = teacher_info.all_points[j].x;
+		int y = teacher_info.all_points[j].y;
+		part_loc.append(x);
+		part_loc.append(y);
+		root["Parts'location"].append(part_loc);
+	}
+	root["pointing"] = teacher_info.front_pointing || teacher_info.back_pointing;
+	root["teacher_in_screen"] = teacher_info.teacher_in_screen;
+	root_all.append(root);
+
+	ofstream out;
+	string jsonfile = "../output_json/" + videoname + ".json";
+	out.open(jsonfile);
+	Json::StyledWriter sw;
+	out << sw.write(root_all);
+	out.close();
+
+}
 static float CalculateVectorAngle(float x1, float y1, float x2, float y2, float x3, float y3)
 {
 	float x_1 = x2 - x1;
@@ -41,12 +70,14 @@ Teacher_Info teacher_detect(Net &net1, Net &net2, jfda::JfdaDetector &detector,c
 		//Í¿µô²¿·ÖÇøÓò
 		Mat img_copy;
 		img.copyTo(img_copy);
-		/*int height = 800;
-		cv::rectangle(img_copy, Point(0, height), Point(img.size[1], img.size[0]), Scalar(0, 0, 0), -1, 8, 0);*/
+		int height = 670*2/3;
+		cv::rectangle(img_copy, Point(0, height), Point(img.size[1], img.size[0]), Scalar(0, 0, 0), -1, 8, 0);
 
 		timer.Tic();
 		//detect body
+		
 		all_bbox = im_detect(net2, img_copy, box_pre);
+		
 		//cv::rectangle(img, box_pre, cv::Scalar(0, 0, 255), 2);
 		/*timer.Toc();
 		cout << "detect body cost " << timer.Elasped() / 1000.0 << "s" << endl;*/
@@ -67,16 +98,20 @@ Teacher_Info teacher_detect(Net &net1, Net &net2, jfda::JfdaDetector &detector,c
 			bbox_new1.width = int(bbox_new.height * 1);
 			bbox_new1.x = bbox_new.x - (bbox_new1.width - bbox_new.width) / 2;
 			bbox_new1.y = bbox_new.y;
-			bbox_new1 = refine(img, bbox_new1);
+			bbox_new1=refine(img, bbox_new1);
 			Mat im_body = img(bbox_new1);
 			vector<vector<float>>all_peaks = pose_detect(net1, im_body);
 			if (all_peaks[1].size() != 0){
-				teacher_info.location.x = all_peaks[1][0];
-				teacher_info.location.y = all_peaks[1][1];
+				teacher_info.location.x = all_peaks[1][0] + bbox_new1.x;
+				teacher_info.location.y = all_peaks[1][1] + bbox_new1.y;
 			}
-			for (int i = 2; i < 8; i++){
+			for (int i = 0; i < 8; i++){
 				if (all_peaks[i].size() != 0 && all_peaks[i][2] > 0.2){
+					teacher_info.all_points.push_back(Point(all_peaks[i][0] + bbox_new1.x, all_peaks[i][1] + bbox_new1.y));
 					cv::circle(img, Point(all_peaks[i][0] + bbox_new1.x, all_peaks[i][1] + bbox_new1.y), 4, cv::Scalar(0, 0, 255), -1);
+				}
+				else{
+					teacher_info.all_points.push_back(Point(0,0));
 				}
 			}
 
@@ -143,14 +178,18 @@ Teacher_Info teacher_detect(Net &net1, Net &net2, jfda::JfdaDetector &detector,c
 			//if (raising_total_time >= 1 && raising_total_time<4){  //back   1=<rasing_time<4  pointing
 			//	teacher_info.back_pointing = true;
 			//}
-			//if (teacher_info.writing){
-			//	string status = "Writing";
-			//	cv::putText(img, status, Point(img.size[1] / 2, img.size[0] / 2), FONT_HERSHEY_DUPLEX, 1, Scalar(255, 255, 255));
-			//}
-			//if (teacher_info.front_pointing||teacher_info.back_pointing){
-			//	string status = "Pointing";
-			//	cv::putText(img, status, Point(img.size[1] / 2, img.size[0] / 2), FONT_HERSHEY_DUPLEX, 1, Scalar(255, 255, 255));
-			//}
+
+			/*writeJson(teacher_info,n);
+
+
+			if (teacher_info.front_pointing){
+				string status = "pointing";
+				cv::putText(img, status, Point(img.size[1] / 2, img.size[0] / 2), FONT_HERSHEY_DUPLEX, 1, Scalar(255, 255, 255));
+			}
+			if (teacher_info.back_pointing){
+				string status = "pointing";
+				cv::putText(img, status, Point(img.size[1] / 2, img.size[0] / 2), FONT_HERSHEY_DUPLEX, 1, Scalar(255, 255, 255));
+			}*/
 			string output = "../output";
 			char buff[300];
 			sprintf(buff, "%s/%d.jpg", output.c_str(), n);

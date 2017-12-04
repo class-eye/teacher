@@ -14,6 +14,8 @@ struct Teacher_Info{
 	bool back_pointing = false;
 	int num;
 	bool teacher_in_screen = false;
+	vector<Point2f>all_points;
 };
 Teacher_Info teacher_detect(Net &net1, Net &net2, jfda::JfdaDetector &detector, cv::Mat &img, Rect &box_pre, int &n);
+extern string videoname;
 #endif

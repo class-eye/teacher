@@ -46,7 +46,7 @@ vector<vector<float>> pose_detect(Net &net,Mat &oriImg){
 		}
 	}
 	
-	cv::resize(heatmap, heatmap, Size(0, 0), stride, stride);
+	//cv::resize(heatmap, heatmap, Size(0, 0), stride, stride);
 	cv::resize(heatmap, heatmap, cv::Size(oriImg.size[1], oriImg.size[0]));
 	/*for (int i = 0; i < 9; i++){
 		cout << heatmap.at<float>(800, i) << "  " << endl;
@@ -62,14 +62,14 @@ vector<vector<float>> pose_detect(Net &net,Mat &oriImg){
 	Mat map_ori = Mat::zeros(oriImg.size[0], oriImg.size[1],CV_32F);
 	//cout << oriImg.size[0] << oriImg.size[1] << endl;
 	
-	for (int i = 0; i < 9; i++){
+	for (int i = 0; i < 8; i++){
 		for (int j = 0; j < oriImg.size[0]; j++){
 			for (int k = 0; k < oriImg.size[1]; k++){
 				map_ori.at<float>(j, k) = heatmap.at<float>(j, 19 * k + i);
 			}
 		}
 		Mat map;
-		GaussianBlur(map_ori, map, Size(7,7),3, 3);
+		GaussianBlur(map_ori, map, Size(13,13),5, 5);
 
 		Mat map_left = Mat::zeros(oriImg.size[0], oriImg.size[1], CV_32F);
 		map.rowRange(0, oriImg.size[0] - 1).copyTo(map_left.rowRange(1, oriImg.size[0]));
