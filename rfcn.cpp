@@ -12,6 +12,7 @@ using namespace caffe;
 struct BBox {
 	float x1, y1, x2, y2;
 };
+
 Rect refine(Mat &img,Rect &box_r)
 {
 	if (box_r.x <= 0)
@@ -70,7 +71,7 @@ vector<Rect> im_detect(Net &net,Mat &im,  Rect &box_pre) {
 	int height = img.rows;
 	int width = img.cols;
 	const int kSizeMin = 600;
-	const int kSizeMax = 600;
+	const int kSizeMax = 700;
 	const float kScoreThreshold = 0.6f;
 
 
@@ -82,7 +83,6 @@ vector<Rect> im_detect(Net &net,Mat &im,  Rect &box_pre) {
 	}
 	Mat imgResized;
 	cv::resize(img, imgResized, Size(0, 0), scale_factor, scale_factor);
-
 	
 	vector<Mat> bgr;
 	cv::split(imgResized, bgr);
@@ -106,7 +106,6 @@ vector<Rect> im_detect(Net &net,Mat &im,  Rect &box_pre) {
 	im_info->mutable_cpu_data()[2] = scale_factor;
 
 	net.Forward();
-	
 	
 	shared_ptr<Blob> rois = net.blob_by_name("rois");
 	shared_ptr<Blob> cls_prob = net.blob_by_name("cls_prob");
@@ -154,10 +153,10 @@ vector<Rect> im_detect(Net &net,Mat &im,  Rect &box_pre) {
 			bbox_new.width = int(bbox.x2) - int(bbox.x1)+400;
 			bbox_new.height = int(bbox.y2) - int(bbox.y1)+450 ;*/
 
-			bbox_new.x = int(bbox.x1) + box_pre.x - 50;
-			bbox_new.y = int(bbox.y1) + box_pre.y - 100;
-			bbox_new.width = int(bbox.x2) - int(bbox.x1) + 100;
-			bbox_new.height = int(bbox.y2) - int(bbox.y1) + 150;
+			bbox_new.x = int(bbox.x1) + box_pre.x/* - (int(bbox.x2) - int(bbox.x1))/3*/;
+			bbox_new.y = int(bbox.y1) + box_pre.y/* - (int(bbox.y2) - int(bbox.y1))/3*/;
+			bbox_new.width = int(bbox.x2) - int(bbox.x1) /*+ (int(bbox.x2) - int(bbox.x1)) * 2 / 3*/;
+			bbox_new.height = int(bbox.y2) - int(bbox.y1)/* + (int(bbox.y2) - int(bbox.y1)) * 2 / 3*/;
 			bbox_new = refine(im, bbox_new);
 			all_bbox.push_back(bbox_new);
 		}
@@ -168,9 +167,9 @@ vector<Rect> im_detect(Net &net,Mat &im,  Rect &box_pre) {
 			box_pre.height = im.size().height;
 		}
 		if (all_bbox.size()==1){
-			box_pre.x = bbox_new.x - 450;
-			box_pre.y = bbox_new.y - 50;
-			box_pre.width = bbox_new.width + 900;
+			box_pre.x = bbox_new.x - 450 * 2 / 3;
+			box_pre.y = bbox_new.y - 50 * 2 / 3;
+			box_pre.width = bbox_new.width + 900 * 2 / 3;
 			box_pre.height = box_pre.width / 1.7778;
 			box_pre = refine(im, box_pre);
 		}
