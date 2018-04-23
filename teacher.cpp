@@ -173,9 +173,9 @@ Teacher_Info Teacher_analy::teacher_detect(jfda::JfdaDetector &detector, cv::Mat
 				if (all_peaks[4][1] <= all_peaks[2][1])symbol_r_back = 1;
 				if (all_peaks[4][1] <= (all_peaks[2][1] + all_peaks[3][1]) / 2)symbol_r_back = 1;
 			}
-			else if (faces.size() == 0 || faces[0].score < 0.9){
+			else /*if (faces.size() == 0 || faces[0].score < 0.9)*/{
 				if (all_peaks[4][1] <= all_peaks[2][1])symbol_r_front = 1;
-				if (all_peaks[4][1] <= (all_peaks[2][1] + all_peaks[3][1]) / 2)symbol_r_front = 1;
+				//if (all_peaks[4][1] <= (all_peaks[2][1] + all_peaks[3][1]) / 2)symbol_r_front = 1;
 			}
 
 			float angle_r = CalculateVectorAngle(all_peaks[2][0], all_peaks[2][1], all_peaks[3][0], all_peaks[3][1], all_peaks[4][0], all_peaks[4][1]);
@@ -192,9 +192,9 @@ Teacher_Info Teacher_analy::teacher_detect(jfda::JfdaDetector &detector, cv::Mat
 				if (all_peaks[7][1] <= all_peaks[5][1])symbol_l_back = 1;
 				if (all_peaks[7][1] <= (all_peaks[5][1] + all_peaks[6][1]) / 2)symbol_l_back = 1;
 			}
-			else if (faces.size() == 0 || faces[0].score < 0.9){
+			else /*if (faces.size() == 0 || faces[0].score < 0.9)*/{
 				if (all_peaks[7][1] <= all_peaks[5][1])symbol_l_front = 1;
-				if (all_peaks[7][1] <= (all_peaks[5][1] + all_peaks[6][1]) / 2)symbol_l_front = 1;
+				//if (all_peaks[7][1] <= (all_peaks[5][1] + all_peaks[6][1]) / 2)symbol_l_front = 1;
 			}
 			float angle_l = CalculateVectorAngle(all_peaks[5][0], all_peaks[5][1], all_peaks[6][0], all_peaks[6][1], all_peaks[7][0], all_peaks[7][1]);
 			//if ((all_peaks[7][1] <= all_peaks[5][1]) && angle_l > 145)interaction_l = 1;
