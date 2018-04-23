@@ -1,8 +1,9 @@
 #pragma once
-
+#include <iostream>
 #include <vector>
 #include <string>
 #include <opencv2/core/core.hpp>
+using namespace std;
 struct  FaceInfo{
 	/*! \brief top left, right bottom bbox, [x1, y1, x2, y2] */
 	cv::Rect bbox;
@@ -11,6 +12,12 @@ struct  FaceInfo{
 	/*! \brief bbox offset [dx1, dy1, dx2, dy2] */
 	/*! \brief landmark, left eye,, right eye, nose, left mouth, right mouth [x1, y1, x2, y2, ...] */
 	std::vector<CvPoint2D32f> landmark;
+	string path;
+	vector<float>feature;
+
+	cv::Mat img_face;
+	cv::Point center;
+	float sco[2];
 };
 struct FaceInfoInternal {
 	/*! \brief top left, right bottom bbox, [x1, y1, x2, y2] */

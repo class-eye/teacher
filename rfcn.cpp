@@ -153,10 +153,10 @@ vector<Rect> im_detect(Net &net,Mat &im,  Rect &box_pre) {
 			bbox_new.width = int(bbox.x2) - int(bbox.x1)+400;
 			bbox_new.height = int(bbox.y2) - int(bbox.y1)+450 ;*/
 
-			bbox_new.x = int(bbox.x1) + box_pre.x/* - (int(bbox.x2) - int(bbox.x1))/3*/;
-			bbox_new.y = int(bbox.y1) + box_pre.y/* - (int(bbox.y2) - int(bbox.y1))/3*/;
-			bbox_new.width = int(bbox.x2) - int(bbox.x1) /*+ (int(bbox.x2) - int(bbox.x1)) * 2 / 3*/;
-			bbox_new.height = int(bbox.y2) - int(bbox.y1)/* + (int(bbox.y2) - int(bbox.y1)) * 2 / 3*/;
+			bbox_new.x = int(bbox.x1) + box_pre.x - (int(bbox.x2) - int(bbox.x1))/4;
+			bbox_new.y = int(bbox.y1) + box_pre.y - (int(bbox.y2) - int(bbox.y1))/5;
+			bbox_new.width = int(bbox.x2) - int(bbox.x1) + (int(bbox.x2) - int(bbox.x1)) * 1 / 2;
+			bbox_new.height = int(bbox.y2) - int(bbox.y1) + (int(bbox.y2) - int(bbox.y1)) * 2 / 5;
 			bbox_new = refine(im, bbox_new);
 			all_bbox.push_back(bbox_new);
 		}

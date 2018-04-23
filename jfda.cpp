@@ -1,12 +1,11 @@
 #include <iostream>
 #include <algorithm>
 #include <caffe/net.hpp>
-#include <google/protobuf/text_format.h>
-#include <google/protobuf/io/coded_stream.h>
+
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
-#include "teacher/teacher.hpp"
+#include "teacher/jfda.hpp"
 
 using std::vector;
 using std::string;
@@ -125,6 +124,7 @@ void JfdaDetector::SetStageThresholds(float th1, float th2, float th3) {
 }
 
 void JfdaDetector::SetMaxImageSize(int max_image_size) {
+	
   if (max_image_size > 128) {
     impl_->max_img_size_ = max_image_size;
   }
