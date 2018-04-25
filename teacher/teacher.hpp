@@ -36,6 +36,8 @@ private:
 	int interaction_time = 0;
 	int interaction_total_time = 0;
 	vector<int>have_face;
+
+	int no_teacher = 0;
 };
 
 #endif

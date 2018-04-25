@@ -94,12 +94,14 @@ Teacher_Info Teacher_analy::teacher_detect(jfda::JfdaDetector &detector, cv::Mat
 
 	//timer.Tic();
 	//detect body
-
+	if (no_teacher >= 5){
+		box_pre = Rect(0, 0, img_copy.size().width, img_copy.size().height);
+	}
 	all_bbox = im_detect(*rfcnnet, img_copy, box_pre);
 
 	//cv::rectangle(img, box_pre, cv::Scalar(0, 0, 255), 2);
-	//timer.Toc();
-	//cout << "detect body cost " << timer.Elasped() / 1000.0 << "s" << endl;
+	/*timer.Toc();
+	cout << "detect body cost " << timer.Elasped() / 1000.0 << "s" << endl;*/
 
 
 	if (all_bbox.size() > 1){
@@ -111,8 +113,12 @@ Teacher_Info Teacher_analy::teacher_detect(jfda::JfdaDetector &detector, cv::Mat
 		if (bbox_new.x != box_pre.x || bbox_new.y != box_pre.y || bbox_new.width != box_pre.width || bbox_new.height != box_pre.height){
 			teacher_info.num = 1;
 			cv::rectangle(img, bbox_new, cv::Scalar(0, 255, 0), 2);
+			no_teacher = 0;
 		}
-		else teacher_info.num = 0;
+		else {
+			no_teacher++;
+			teacher_info.num = 0;
+		}
 
 		//detect pose
 		bbox_new1.height = bbox_new.height;
@@ -120,11 +126,12 @@ Teacher_Info Teacher_analy::teacher_detect(jfda::JfdaDetector &detector, cv::Mat
 		bbox_new1.x = bbox_new.x - (bbox_new1.width - bbox_new.width) / 2;
 		bbox_new1.y = bbox_new.y;
 		bbox_new1 = refine(img, bbox_new1);
+		
 		Mat im_body = img(bbox_new1);
 		//timer.Tic();
 		vector<vector<float>>all_peaks = pose_detect(*posenet, im_body);
-		//timer.Toc();
-		//cout << "detect pose cost " << timer.Elasped() / 1000.0 << "s" << endl;
+		/*timer.Toc();
+		cout << "detect pose cost " << timer.Elasped() / 1000.0 << "s" << endl;*/
 		if (all_peaks[1].size() != 0){
 			teacher_info.location.x = all_peaks[1][0] + bbox_new1.x;
 			teacher_info.location.y = all_peaks[1][1] + bbox_new1.y;

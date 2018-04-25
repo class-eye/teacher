@@ -71,7 +71,7 @@ vector<Rect> im_detect(Net &net,Mat &im,  Rect &box_pre) {
 	int height = img.rows;
 	int width = img.cols;
 	const int kSizeMin = 600;
-	const int kSizeMax = 700;
+	const int kSizeMax = 600;
 	const float kScoreThreshold = 0.6f;
 
 
