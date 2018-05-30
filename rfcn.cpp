@@ -167,9 +167,9 @@ vector<Rect> im_detect(Net &net,Mat &im,  Rect &box_pre) {
 			box_pre.height = im.size().height;
 		}
 		if (all_bbox.size()==1){
-			box_pre.x = bbox_new.x - 450 * 2 / 3;
+			box_pre.x = bbox_new.x - int((float(300) / 1280) * im.size().width);
 			box_pre.y = bbox_new.y - 50 * 2 / 3;
-			box_pre.width = bbox_new.width + 900 * 2 / 3;
+			box_pre.width = bbox_new.width + 2 * int((float(300) / 1280) * im.size().width);
 			box_pre.height = box_pre.width / 1.7778;
 			box_pre = refine(im, box_pre);
 		}

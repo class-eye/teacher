@@ -73,6 +73,14 @@ JfdaDetector::JfdaDetector(const string& pnet, const string& pmodel,
                            const string& onet, const string& omodel,
                            const string& lnet, const string& lmodel,
                            int gpu_device) {
+	if (gpu_device < 0) {
+		caffe::SetMode(caffe::CPU, -1);
+	}
+	else {
+		if (caffe::GPUAvailable()){
+			caffe::SetMode(caffe::GPU, gpu_device);
+		}
+	}
   
   impl_ = new Impl;
   impl_->pnet = new caffe::Net(pnet);
