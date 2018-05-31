@@ -110,8 +110,9 @@ Teacher_Info Teacher_analy::teacher_detect(jfda::JfdaDetector &detector, cv::Mat
 	//Í¿µô²¿·ÖÇøÓò
 	Mat img_copy;
 	img.copyTo(img_copy);
-	/*int height = 344*2/3;
-	cv::rectangle(img_copy, Point(0, height), Point(img.size[1], img.size[0]), Scalar(0, 0, 0), -1, 8, 0);*/
+	//int height = 344*2/3;
+	int width = 38;
+	cv::rectangle(img_copy, Point(0, 0), Point(width, img.size[0]), Scalar(0, 0, 0), -1, 8, 0);
 
 	timer.Tic();
 	//detect body
@@ -128,6 +129,11 @@ Teacher_Info Teacher_analy::teacher_detect(jfda::JfdaDetector &detector, cv::Mat
 
 	if (all_bbox.size() > 1){
 		teacher_info.num = all_bbox.size();
+		/*for (int i = 0; i < all_bbox.size(); i++){
+			Rect bbbox = all_bbox[i];		
+			cv::rectangle(img, bbbox, cv::Scalar(0, 255, 0), 2);
+		}
+		cv::putText(img, to_string(all_bbox.size()), Point(100,100), FONT_HERSHEY_DUPLEX, 0.5, cv::Scalar(0, 0, 255));*/
 		return teacher_info;
 	}
 	if (all_bbox.size() == 1){
@@ -145,7 +151,7 @@ Teacher_Info Teacher_analy::teacher_detect(jfda::JfdaDetector &detector, cv::Mat
 		//detect pose
 		if (teacher_info.num == 1){
 			bbox_new1.height = bbox_new.height;
-			bbox_new1.width = int(bbox_new.height / 1.78);
+			bbox_new1.width = int(bbox_new.height / 1.4);
 			bbox_new1.x = bbox_new.x - (bbox_new1.width - bbox_new.width) / 2;
 			bbox_new1.y = bbox_new.y;
 			bbox_new1 = refine(img, bbox_new1);
@@ -185,7 +191,7 @@ Teacher_Info Teacher_analy::teacher_detect(jfda::JfdaDetector &detector, cv::Mat
 			if (faces.size() != 0 && faces[0].score > 0.9){
 				string score = to_string(faces[0].score);
 				cv::rectangle(img, Point(faces[0].bbox.x + bbox_new1.x, faces[0].bbox.y + bbox_new1.y), Point(faces[0].bbox.x + bbox_new1.x + faces[0].bbox.width, faces[0].bbox.y + bbox_new1.y + faces[0].bbox.height), cv::Scalar(0, 0, 255), 2);
-				cv::putText(img, score, Point(faces[0].bbox.x + bbox_new1.x, faces[0].bbox.y + bbox_new1.y - 15), FONT_HERSHEY_DUPLEX, 1, Scalar(255, 255, 255));
+				//cv::putText(img, score, Point(faces[0].bbox.x + bbox_new1.x, faces[0].bbox.y + bbox_new1.y - 15), FONT_HERSHEY_DUPLEX, 1, Scalar(255, 255, 255));
 			}
 
 			//pose estimation
@@ -196,42 +202,48 @@ Teacher_Info Teacher_analy::teacher_detect(jfda::JfdaDetector &detector, cv::Mat
 			int interaction_l = 0;
 			int interaction_r = 0;
 			if (have_face.size() == 5)have_face.erase(have_face.begin());
-			if (faces.size() == 1)have_face.push_back(1);
-			if (faces.size() == 0)have_face.push_back(0);
+			if (faces.size() == 1 && faces[0].score > 0.9)have_face.push_back(1);
+			if (faces.size() == 0 || (faces.size() == 1 && faces[0].score < 0.9))have_face.push_back(0);
 
-			if (all_peaks[4].size() != 0 && all_peaks[3].size() != 0 && all_peaks[2].size() != 0 && all_peaks[5].size() != 0 && all_peaks[4][2] > 0.2 && all_peaks[3][2] > 0.2 && all_peaks[2][2] > 0.2 && all_peaks[5][2] > 0.2){
+			//----------------------------right----------------------------------------
+			if (all_peaks[2].size() != 0 && all_peaks[5].size() != 0 && all_peaks[2][2] > 0.2 && all_peaks[5][2] > 0.2){
 				if (all_peaks[2][0] > all_peaks[5][0]){
-					if (all_peaks[4][1] <= all_peaks[2][1])symbol_r_back = 1;
-					if (all_peaks[4][1] <= (all_peaks[2][1] + all_peaks[3][1]) / 2)symbol_r_back = 1;
+					if (all_peaks[4].size() != 0 && all_peaks[2].size() != 0 && all_peaks[4][2] > 0.2&& all_peaks[2][2] > 0.2){
+						if (all_peaks[4][1] <= all_peaks[2][1])symbol_r_back = 1;
+					}
+					if (all_peaks[4].size() != 0 && all_peaks[3].size() != 0 && all_peaks[2].size() != 0 && all_peaks[4][2] > 0.2 && all_peaks[3][2] > 0.2 && all_peaks[2][2] > 0.2){
+						if (all_peaks[4][1] <= (all_peaks[2][1] + all_peaks[3][1]) / 2)symbol_r_back = 1;
+					}
 				}
-				else /*if (faces.size() == 0 || faces[0].score < 0.9)*/{
-					if (all_peaks[4][1] <= all_peaks[2][1])symbol_r_front = 1;
-					//if (all_peaks[4][1] <= (all_peaks[2][1] + all_peaks[3][1]) / 2)symbol_r_front = 1;
-				}
+			}
+			int count_ = count(have_face.begin(), have_face.end(), 0);
+			//cv::putText(img, to_string(count_), Point(200,200), FONT_HERSHEY_DUPLEX, 1, Scalar(255, 255, 255));
+			if (all_peaks[4].size() != 0 && all_peaks[3].size() != 0 && all_peaks[2].size() != 0 && all_peaks[4][2] > 0.2 && all_peaks[3][2] > 0.2 && all_peaks[2][2] > 0.2){
+				if ((all_peaks[4][1] <= (all_peaks[2][1] + all_peaks[3][1]) / 2) && count_ >= 2)interaction_r = 1;
+			}
+			if (all_peaks[4].size() != 0 && all_peaks[2].size() != 0 && all_peaks[4][2] > 0.2&& all_peaks[2][2] > 0.2){
+				if ((all_peaks[4][1] <= all_peaks[2][1]) && count_ >= 2)interaction_r = 1;
+			}
 
-				float angle_r = CalculateVectorAngle(all_peaks[2][0], all_peaks[2][1], all_peaks[3][0], all_peaks[3][1], all_peaks[4][0], all_peaks[4][1]);
-				int count_ = count(have_face.begin(), have_face.end(), 0);
-				if ((all_peaks[4][1] <= (all_peaks[2][1] + all_peaks[3][1]) / 2) || (all_peaks[4][1] <= all_peaks[2][1]) && count_ >= 2)interaction_r = 1;
-				if ((all_peaks[4][1] <= all_peaks[2][1]) && count_ < 2 && angle_r>145)interaction_r = 1;
-				/*if (abs(all_peaks[2][1] - all_peaks[5][1]) >= abs(all_peaks[2][0] - all_peaks[5][1])){
-					if (all_peaks[4][1] <= (all_peaks[2][1] + all_peaks[3][1]) / 3)interaction_r = 1;
-					}*/
-			}
-			if (all_peaks[7].size() != 0 && all_peaks[6].size() != 0 && all_peaks[5].size() != 0 && all_peaks[2].size() != 0 && all_peaks[7][2] > 0.2 && all_peaks[6][2] > 0.2 && all_peaks[5][2] > 0.2&& all_peaks[2][2] > 0.2){
+			//------------------------------left-----------------------------------------
+			if (all_peaks[2].size() != 0 && all_peaks[5].size() != 0 && all_peaks[2][2] > 0.2 && all_peaks[5][2] > 0.2){
 				if (all_peaks[2][0] > all_peaks[5][0]){
-					if (all_peaks[7][1] <= all_peaks[5][1])symbol_l_back = 1;
-					if (all_peaks[7][1] <= (all_peaks[5][1] + all_peaks[6][1]) / 2)symbol_l_back = 1;
+					if (all_peaks[7].size() != 0 && all_peaks[5].size() != 0 && all_peaks[7][2] > 0.2&& all_peaks[5][2] > 0.2){
+						if (all_peaks[7][1] <= all_peaks[5][1])symbol_l_back = 1;
+					}
+					if (all_peaks[7].size() != 0 && all_peaks[6].size() != 0 && all_peaks[5].size() != 0 && all_peaks[7][2] > 0.2 && all_peaks[6][2] > 0.2 && all_peaks[5][2] > 0.2){
+						if (all_peaks[7][1] <= (all_peaks[5][1] + all_peaks[6][1]) / 2)symbol_l_back = 1;
+					}
 				}
-				else /*if (faces.size() == 0 || faces[0].score < 0.9)*/{
-					if (all_peaks[7][1] <= all_peaks[5][1])symbol_l_front = 1;
-					//if (all_peaks[7][1] <= (all_peaks[5][1] + all_peaks[6][1]) / 2)symbol_l_front = 1;
-				}
-				float angle_l = CalculateVectorAngle(all_peaks[5][0], all_peaks[5][1], all_peaks[6][0], all_peaks[6][1], all_peaks[7][0], all_peaks[7][1]);
-				//if ((all_peaks[7][1] <= all_peaks[5][1]) && angle_l > 145)interaction_l = 1;
-				int count_ = count(have_face.begin(), have_face.end(), 0);
-				if ((all_peaks[7][1] <= (all_peaks[5][1] + all_peaks[6][1]) / 2) || (all_peaks[7][1] <= all_peaks[5][1]) && count_ >= 2)interaction_l = 1;
-				if ((all_peaks[7][1] <= all_peaks[5][1]) && count_ < 2 && angle_l>145)interaction_l = 1;
 			}
+			
+			if (all_peaks[7].size() != 0 && all_peaks[6].size() != 0 && all_peaks[5].size() != 0 && all_peaks[7][2] > 0.2 && all_peaks[6][2] > 0.2 && all_peaks[5][2] > 0.2){
+				if ((all_peaks[7][1] <= (all_peaks[5][1] + all_peaks[6][1]) / 2) && count_ >= 2)interaction_l = 1;
+			}
+			if (all_peaks[7].size() != 0 && all_peaks[5].size() != 0 && all_peaks[7][2] > 0.2&& all_peaks[5][2] > 0.2){
+				if ((all_peaks[7][1] <= all_peaks[5][1]) && count_ >= 2)interaction_l = 1;
+			}
+
 			//------------------------------------------------------------------------
 			if (symbol_l_front || symbol_r_front || symbol_l_back || symbol_r_back){
 				teacher_info.back_pointing = true;
@@ -243,18 +255,17 @@ Teacher_Info Teacher_analy::teacher_detect(jfda::JfdaDetector &detector, cv::Mat
 			raising_total_time = raising_time;
 
 			//----------------------------------------------------------------------
+		
 			if (interaction_l || interaction_r){
-				interaction_time++;
-			}
-			else interaction_time = 0;
-			interaction_total_time = interaction_time;
-			if (interaction_total_time >= 3){
 				teacher_info.interaction = true;
 				teacher_info.back_pointing = false;
 			}
 			//------------------------------------------------------------------------
-
-
+			//char buf[300];
+			/*sprintf(buf, "interaction_l:%d  interaction_r:%d", interaction_l, interaction_r);
+			cv::putText(img, buf, Point(100, 100), FONT_HERSHEY_DUPLEX, 1, cv::Scalar(0, 0, 255));*/
+			/*sprintf(buf, "%d/%d", count_, have_face.size());
+			cv::putText(img, buf, Point(100, 200), FONT_HERSHEY_DUPLEX, 1, cv::Scalar(0, 0, 255));*/
 
 			if (raising_total_time >= 4){       //back raising_time>=4   writing
 				teacher_info.writing = true;
@@ -271,31 +282,32 @@ Teacher_Info Teacher_analy::teacher_detect(jfda::JfdaDetector &detector, cv::Mat
 			//writeJson(teacher_info,n);
 
 			if (teacher_info.writing){
-				string status = "writing";
+				string status = "writing+focus";
 				cv::putText(img, status, Point(img.size[1] / 2, img.size[0] / 2 - 50), FONT_HERSHEY_DUPLEX, 1, Scalar(255, 255, 255));
 			}
 			if (teacher_info.interaction){
-				string status = "interaction";
+				string status = "interaction+focus";
 				cv::putText(img, status, Point(img.size[1] / 2, img.size[0] / 2 + 50), FONT_HERSHEY_DUPLEX, 1, Scalar(255, 255, 255));
 			}
 			/*if (teacher_info.front_pointing){
 				string status = "pointing";
 				cv::putText(img, status, Point(img.size[1] / 2, img.size[0] / 2), FONT_HERSHEY_DUPLEX, 1, Scalar(255, 255, 255));
 				}*/
-			if (teacher_info.back_pointing){
+			/*if (teacher_info.back_pointing){
 				string status = "pointing";
 				cv::putText(img, status, Point(img.size[1] / 2, img.size[0] / 2), FONT_HERSHEY_DUPLEX, 1, Scalar(255, 255, 255));
-			}
-			timer.Toc();
-			cout << "Frame " << n << " cost " << timer.Elasped() / 1000.0 << "s" << endl;
-
-			string output = "../output";
-			char buff[300];
-			sprintf(buff, "%s/%d.jpg", output.c_str(), n);
-			cv::imwrite(buff, img);
-			return teacher_info;
+			}*/
+			
 		}
 	}
+	timer.Toc();
+	cout << "Frame " << n << " cost " << timer.Elasped() / 1000.0 << "s" << endl;
+
+	string output = "../output";
+	char buff[300];
+	sprintf(buff, "%s/%d.jpg", output.c_str(), n);
+	cv::imwrite(buff, img);
+	return teacher_info;
 #endif
 }
 
